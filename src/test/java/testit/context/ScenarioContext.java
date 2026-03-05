@@ -2,7 +2,9 @@ package testit.context;
 
 import io.restassured.response.Response;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +23,7 @@ public class ScenarioContext {
     private int wrongAnswerId;
     private int attemptId;
     private Map<String, String> anonCookies = new HashMap<>();
+    private List<Integer> questionIds = new ArrayList<>();
 
     public void reset() {
         email = null;
@@ -33,6 +36,7 @@ public class ScenarioContext {
         wrongAnswerId = 0;
         attemptId = 0;
         anonCookies = new HashMap<>();
+        questionIds = new ArrayList<>();
     }
 
     public String getEmail() { return email; }
@@ -64,4 +68,7 @@ public class ScenarioContext {
 
     public Map<String, String> getAnonCookies() { return anonCookies; }
     public void setAnonCookies(Map<String, String> anonCookies) { this.anonCookies = anonCookies; }
+
+    public List<Integer> getQuestionIds() { return questionIds; }
+    public void setQuestionIds(List<Integer> questionIds) { this.questionIds = questionIds; }
 }
