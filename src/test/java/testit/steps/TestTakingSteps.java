@@ -193,6 +193,140 @@ public class TestTakingSteps {
         anAnonymousUserHasCompletedTheTest();
     }
 
+    @Given("the author has created a test with an exact answer question {string}")
+    public void theAuthorHasCreatedATestWithAnExactAnswerQuestion(String correctAnswer) {
+        Response testResp = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "title", "CukeExact_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8),
+                "visibility", "link_only",
+                "max_attempts", 5,
+                "show_answers_after", false
+            ))
+        .when()
+            .post("/tests/");
+        testResp.then().statusCode(201);
+        context.setTestSlug(testResp.jsonPath().getString("slug"));
+
+        Response qResp = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "question_text", "What is the capital of France?",
+                "question_type", "exact_answer",
+                "correct_answer", correctAnswer
+            ))
+        .when()
+            .post("/tests/" + context.getTestSlug() + "/questions/");
+        qResp.then().statusCode(201);
+        context.setQuestionId(qResp.jsonPath().getInt("id"));
+    }
+
+    @Given("the author has created a test with a multi select question")
+    public void theAuthorHasCreatedATestWithAMultiSelectQuestion() {
+        Response testResp = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "title", "CukeMulti_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8),
+                "visibility", "link_only",
+                "max_attempts", 5,
+                "show_answers_after", false
+            ))
+        .when()
+            .post("/tests/");
+        testResp.then().statusCode(201);
+        context.setTestSlug(testResp.jsonPath().getString("slug"));
+
+        Response qResp = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "question_text", "Which are EU capitals?",
+                "question_type", "multi_select",
+                "answers", List.of(
+                    Map.of("answer_text", "Paris",  "is_correct", true,  "order", 1),
+                    Map.of("answer_text", "Berlin", "is_correct", true,  "order", 2),
+                    Map.of("answer_text", "London", "is_correct", false, "order", 3),
+                    Map.of("answer_text", "Sydney", "is_correct", false, "order", 4)
+                )
+            ))
+        .when()
+            .post("/tests/" + context.getTestSlug() + "/questions/");
+        qResp.then().statusCode(201);
+        context.setQuestionId(qResp.jsonPath().getInt("id"));
+
+        List<Map<String, Object>> answers = qResp.jsonPath().getList("answers");
+        List<Integer> correctIds = new java.util.ArrayList<>();
+        List<Integer> wrongIds = new java.util.ArrayList<>();
+        for (Map<String, Object> answer : answers) {
+            Object isCorrectObj = answer.get("is_correct");
+            boolean isCorrect = isCorrectObj != null && (boolean) isCorrectObj;
+            int id = (int) answer.get("id");
+            if (isCorrect) correctIds.add(id);
+            else wrongIds.add(id);
+        }
+        context.setCorrectAnswerIds(correctIds);
+        context.setWrongAnswerIds(wrongIds);
+    }
+
+    @When("the user submits the text answer {string}")
+    public void theUserSubmitsTheTextAnswer(String textAnswer) {
+        String qId = String.valueOf(context.getQuestionId());
+        String slug = context.getTestSlug();
+        int attemptId = context.getAttemptId();
+
+        Map<String, Object> draft = Map.of("draft_answers", Map.of(qId, textAnswer));
+
+        given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(draft)
+        .when()
+            .put("/tests/" + slug + "/attempts/" + attemptId + "/");
+
+        Response response = given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(draft)
+        .when()
+            .post("/tests/" + slug + "/attempts/" + attemptId + "/submit/");
+
+        response.then().statusCode(200);
+        context.setLastResponse(response);
+    }
+
+    @When("the user submits {string} multi select answers")
+    public void theUserSubmitsMultiSelectAnswers(String selection) {
+        List<Integer> answerIds = "all correct".equals(selection)
+            ? context.getCorrectAnswerIds()
+            : context.getWrongAnswerIds();
+
+        String qId = String.valueOf(context.getQuestionId());
+        String slug = context.getTestSlug();
+        int attemptId = context.getAttemptId();
+
+        Map<String, Object> draft = Map.of("draft_answers", Map.of(qId, answerIds));
+
+        given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(draft)
+        .when()
+            .put("/tests/" + slug + "/attempts/" + attemptId + "/");
+
+        Response response = given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(draft)
+        .when()
+            .post("/tests/" + slug + "/attempts/" + attemptId + "/submit/");
+
+        response.then().statusCode(200);
+        context.setLastResponse(response);
+    }
+
     @When("the user tries to submit the same attempt again")
     public void theUserTriesToSubmitTheSameAttemptAgain() {
         Response response = given()

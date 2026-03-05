@@ -25,6 +25,15 @@ public class ScenarioContext {
     private Map<String, String> anonCookies = new HashMap<>();
     private List<Integer> questionIds = new ArrayList<>();
 
+    // Multi-select: multiple correct/wrong answer IDs
+    private List<Integer> correctAnswerIds = new ArrayList<>();
+    private List<Integer> wrongAnswerIds = new ArrayList<>();
+
+    // Folder management
+    private int companyId;
+    private int folderId;
+    private Map<String, Integer> folderIdByName = new HashMap<>();
+
     public void reset() {
         email = null;
         password = null;
@@ -37,6 +46,11 @@ public class ScenarioContext {
         attemptId = 0;
         anonCookies = new HashMap<>();
         questionIds = new ArrayList<>();
+        correctAnswerIds = new ArrayList<>();
+        wrongAnswerIds = new ArrayList<>();
+        companyId = 0;
+        folderId = 0;
+        folderIdByName = new HashMap<>();
     }
 
     public String getEmail() { return email; }
@@ -71,4 +85,22 @@ public class ScenarioContext {
 
     public List<Integer> getQuestionIds() { return questionIds; }
     public void setQuestionIds(List<Integer> questionIds) { this.questionIds = questionIds; }
+
+    public List<Integer> getCorrectAnswerIds() { return correctAnswerIds; }
+    public void setCorrectAnswerIds(List<Integer> correctAnswerIds) { this.correctAnswerIds = correctAnswerIds; }
+
+    public List<Integer> getWrongAnswerIds() { return wrongAnswerIds; }
+    public void setWrongAnswerIds(List<Integer> wrongAnswerIds) { this.wrongAnswerIds = wrongAnswerIds; }
+
+    public int getCompanyId() { return companyId; }
+    public void setCompanyId(int companyId) { this.companyId = companyId; }
+
+    public int getFolderId() { return folderId; }
+    public void setFolderId(int folderId) { this.folderId = folderId; }
+
+    public Map<String, Integer> getFolderIdByName() { return folderIdByName; }
+    public void putFolderId(String name, int id) {
+        this.folderIdByName.put(name, id);
+        this.folderId = id;
+    }
 }
