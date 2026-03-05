@@ -27,3 +27,14 @@ Feature: User Authentication
     When the user requests their profile
     Then the response status should be 200
     And the profile email matches the registered email
+
+  Scenario Outline: Registration is rejected with invalid data
+    When a user tries to register with email "<email>" password "<password>" and confirm "<confirm>"
+    Then the response status should be 400
+
+    Examples:
+      | email           | password     | confirm      |
+      | not-an-email    | Password123! | Password123! |
+      | valid@test.com  | abc          | abc          |
+      |                 | Password123! | Password123! |
+      | valid@test.com  | Password123! | WrongMatch1! |

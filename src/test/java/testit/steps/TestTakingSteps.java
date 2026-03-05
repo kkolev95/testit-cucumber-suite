@@ -115,14 +115,12 @@ public class TestTakingSteps {
         context.setAnonCookies(response.cookies());
     }
 
-    @When("the user submits all correct answers")
-    public void theUserSubmitsAllCorrectAnswers() {
-        submitAnswers(context.getCorrectAnswerId());
-    }
-
-    @When("the user submits all wrong answers")
-    public void theUserSubmitsAllWrongAnswers() {
-        submitAnswers(context.getWrongAnswerId());
+    @When("the user submits all {string} answers")
+    public void theUserSubmitsAllAnswers(String answerType) {
+        int answerId = "correct".equals(answerType)
+            ? context.getCorrectAnswerId()
+            : context.getWrongAnswerId();
+        submitAnswers(answerId);
     }
 
     private void submitAnswers(int answerId) {
@@ -171,7 +169,7 @@ public class TestTakingSteps {
     @Given("an anonymous user has completed the test")
     public void anAnonymousUserHasCompletedTheTest() {
         anAnonymousUserHasStartedTheTest();
-        theUserSubmitsAllCorrectAnswers();
+        theUserSubmitsAllAnswers("correct");
     }
 
     @When("the author views the test results")

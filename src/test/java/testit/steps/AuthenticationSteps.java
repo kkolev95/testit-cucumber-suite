@@ -72,6 +72,22 @@ public class AuthenticationSteps {
         registerNewUser();
     }
 
+    @When("a user tries to register with email {string} password {string} and confirm {string}")
+    public void aUserTriesToRegisterWithEmailPasswordAndConfirm(String email, String password, String confirm) {
+        Response response = given()
+            .contentType(JSON)
+            .body(Map.of(
+                "email",            email,
+                "password",         password,
+                "password_confirm", confirm,
+                "first_name",       "Test",
+                "last_name",        "User"
+            ))
+        .when()
+            .post("/auth/register/");
+        context.setLastResponse(response);
+    }
+
     @Given("a registered user exists")
     public void aRegisteredUserExists() {
         registerNewUser();
