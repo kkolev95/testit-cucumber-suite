@@ -142,6 +142,22 @@ public class AuthenticationSteps {
         context.setLastResponse(response);
     }
 
+    @When("a user tries to register with the same email again")
+    public void aUserTriesToRegisterWithTheSameEmailAgain() {
+        Response response = given()
+            .contentType(JSON)
+            .body(Map.of(
+                "email",            context.getEmail(),
+                "password",         "Password123!",
+                "password_confirm", "Password123!",
+                "first_name",       "Duplicate",
+                "last_name",        "User"
+            ))
+        .when()
+            .post("/auth/register/");
+        context.setLastResponse(response);
+    }
+
     @Then("the response status should be {int}")
     public void theResponseStatusShouldBe(int expectedStatus) {
         context.getLastResponse().then().statusCode(expectedStatus);

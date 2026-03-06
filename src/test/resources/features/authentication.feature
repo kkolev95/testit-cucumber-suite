@@ -28,6 +28,11 @@ Feature: User Authentication
     Then the response status should be 200
     And the profile email matches the registered email
 
+  Scenario: Registration with an already-used email is rejected
+    Given a registered user exists
+    When a user tries to register with the same email again
+    Then the response status should be 400
+
   Scenario Outline: Registration is rejected with invalid data
     When a user tries to register with email "<email>" password "<password>" and confirm "<confirm>"
     Then the response status should be 400
