@@ -101,6 +101,20 @@ public class TestTakingSteps {
         }
     }
 
+    @When("an anonymous user starts an attempt")
+    public void anAnonymousUserStartsAnAttempt() {
+        Response response = given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "Schema Tester"))
+        .when()
+            .post("/tests/" + context.getTestSlug() + "/attempts/");
+
+        response.then().statusCode(201);
+        context.setAttemptId(response.jsonPath().getInt("id"));
+        context.setAnonCookies(response.cookies());
+        context.setLastResponse(response);
+    }
+
     @Given("an anonymous user has started the test")
     public void anAnonymousUserHasStartedTheTest() {
         Response response = given()
