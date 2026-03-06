@@ -29,8 +29,9 @@ public class ScenarioContext {
     private List<Integer> correctAnswerIds = new ArrayList<>();
     private List<Integer> wrongAnswerIds = new ArrayList<>();
 
-    // Folder management
+    // Company / folder management
     private int companyId;
+    private String companyName;
     private int folderId;
     private Map<String, Integer> folderIdByName = new HashMap<>();
 
@@ -49,6 +50,7 @@ public class ScenarioContext {
         correctAnswerIds = new ArrayList<>();
         wrongAnswerIds = new ArrayList<>();
         companyId = 0;
+        companyName = null;
         folderId = 0;
         folderIdByName = new HashMap<>();
     }
@@ -94,6 +96,9 @@ public class ScenarioContext {
 
     public int getCompanyId() { return companyId; }
     public void setCompanyId(int companyId) { this.companyId = companyId; }
+
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
 
     public int getFolderId() { return folderId; }
     public void setFolderId(int folderId) { this.folderId = folderId; }

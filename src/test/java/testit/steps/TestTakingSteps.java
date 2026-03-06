@@ -327,6 +327,41 @@ public class TestTakingSteps {
         context.setLastResponse(response);
     }
 
+    @Given("the author has created a password-protected test with password {string}")
+    public void theAuthorHasCreatedAPasswordProtectedTestWithPassword(String password) {
+        Response testResp = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "title",             "CukePW_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8),
+                "visibility",        "password_protected",
+                "password",          password,
+                "max_attempts",      5,
+                "show_answers_after", false
+            ))
+        .when()
+            .post("/tests/");
+        testResp.then().statusCode(201);
+        context.setTestSlug(testResp.jsonPath().getString("slug"));
+    }
+
+    @Then("the response indicates a password is required")
+    public void theResponseIndicatesAPasswordIsRequired() {
+        Boolean requiresPassword = context.getLastResponse().jsonPath().getBoolean("requires_password");
+        assertNotNull(requiresPassword, "Response should contain requires_password field");
+        assertTrue(requiresPassword, "requires_password should be true");
+    }
+
+    @When("an anonymous user verifies the password {string}")
+    public void anAnonymousUserVerifiesThePassword(String password) {
+        Response response = given()
+            .contentType(JSON)
+            .body(Map.of("password", password))
+        .when()
+            .post("/tests/" + context.getTestSlug() + "/verify-password/");
+        context.setLastResponse(response);
+    }
+
     @When("the user tries to submit the same attempt again")
     public void theUserTriesToSubmitTheSameAttemptAgain() {
         Response response = given()
