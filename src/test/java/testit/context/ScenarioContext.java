@@ -29,6 +29,12 @@ public class ScenarioContext {
     private List<Integer> correctAnswerIds = new ArrayList<>();
     private List<Integer> wrongAnswerIds = new ArrayList<>();
 
+    // Invite flow — second user and invite token
+    private String inviteeEmail;
+    private String inviteePassword;
+    private String inviteeToken;
+    private String inviteToken;
+
     // Company / folder management
     private int companyId;
     private String companyName;
@@ -49,6 +55,10 @@ public class ScenarioContext {
         questionIds = new ArrayList<>();
         correctAnswerIds = new ArrayList<>();
         wrongAnswerIds = new ArrayList<>();
+        inviteeEmail = null;
+        inviteePassword = null;
+        inviteeToken = null;
+        inviteToken = null;
         companyId = 0;
         companyName = null;
         folderId = 0;
@@ -93,6 +103,18 @@ public class ScenarioContext {
 
     public List<Integer> getWrongAnswerIds() { return wrongAnswerIds; }
     public void setWrongAnswerIds(List<Integer> wrongAnswerIds) { this.wrongAnswerIds = wrongAnswerIds; }
+
+    public String getInviteeEmail() { return inviteeEmail; }
+    public void setInviteeEmail(String inviteeEmail) { this.inviteeEmail = inviteeEmail; }
+
+    public String getInviteePassword() { return inviteePassword; }
+    public void setInviteePassword(String inviteePassword) { this.inviteePassword = inviteePassword; }
+
+    public String getInviteeToken() { return inviteeToken; }
+    public void setInviteeToken(String inviteeToken) { this.inviteeToken = inviteeToken; }
+
+    public String getInviteToken() { return inviteToken; }
+    public void setInviteToken(String inviteToken) { this.inviteToken = inviteToken; }
 
     public int getCompanyId() { return companyId; }
     public void setCompanyId(int companyId) { this.companyId = companyId; }
