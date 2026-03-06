@@ -44,14 +44,45 @@ JAVA_HOME=~/tools/jdk-21.0.2 ~/tools/apache-maven-3.9.6/bin/mvn test
 
 ## Reports
 
+### Generated automatically by `./run.sh`
+
+No separate step is needed — the report is created at the end of every run.
+
 After each run, two files are always current:
 
 ```
-reports/latest-report.html   ← open this in a browser
-reports/latest-log.log       ← full terminal output
+reports/latest-report.html        ← most recent HTML report (open in browser)
+reports/latest-log.log            ← full terminal output from that run
 ```
 
-Timestamped copies are kept alongside them. The `reports/` directory is gitignored.
+Timestamped copies are also kept alongside them so you can compare runs:
+
+```
+reports/report-2026-03-06_10-04-26-my-label.html
+reports/log-2026-03-06_10-04-26-my-label.log
+```
+
+The `reports/` directory is gitignored.
+
+### Opening the report from WSL
+
+```bash
+# Option 1 — open directly in Windows default browser
+explorer.exe "$(wslpath -w reports/latest-report.html)"
+
+# Option 2 — print the Windows path and paste it into your browser
+wslpath -w "$(pwd)/reports/latest-report.html"
+```
+
+### Raw Maven report location
+
+If you run Maven directly (without `run.sh`), the report is written to:
+
+```
+target/cucumber-reports/report.html
+```
+
+`run.sh` copies this file into `reports/` and renames it — running Maven directly does not update `reports/`.
 
 ---
 
