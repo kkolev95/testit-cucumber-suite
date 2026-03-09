@@ -41,6 +41,13 @@ public class ScenarioContext {
     private int folderId;
     private Map<String, Integer> folderIdByName = new HashMap<>();
 
+    // Data integrity and cross-user detail
+    private double lastScore;
+    private int questionId2;
+    private int correctAnswerId2;
+    private int inviteeUserId;
+    private int resultId;
+
     public void reset() {
         email = null;
         password = null;
@@ -63,6 +70,11 @@ public class ScenarioContext {
         companyName = null;
         folderId = 0;
         folderIdByName = new HashMap<>();
+        lastScore = 0.0;
+        questionId2 = 0;
+        correctAnswerId2 = 0;
+        inviteeUserId = 0;
+        resultId = 0;
     }
 
     public String getEmail() { return email; }
@@ -130,4 +142,19 @@ public class ScenarioContext {
         this.folderIdByName.put(name, id);
         this.folderId = id;
     }
+
+    public double getLastScore() { return lastScore; }
+    public void setLastScore(double lastScore) { this.lastScore = lastScore; }
+
+    public int getQuestionId2() { return questionId2; }
+    public void setQuestionId2(int questionId2) { this.questionId2 = questionId2; }
+
+    public int getCorrectAnswerId2() { return correctAnswerId2; }
+    public void setCorrectAnswerId2(int correctAnswerId2) { this.correctAnswerId2 = correctAnswerId2; }
+
+    public int getInviteeUserId() { return inviteeUserId; }
+    public void setInviteeUserId(int inviteeUserId) { this.inviteeUserId = inviteeUserId; }
+
+    public int getResultId() { return resultId; }
+    public void setResultId(int resultId) { this.resultId = resultId; }
 }
