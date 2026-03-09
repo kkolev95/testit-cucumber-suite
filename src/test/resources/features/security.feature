@@ -49,7 +49,7 @@ Feature: Security
 
   Scenario: XSS payload in test title is handled safely
     Given a registered and authenticated user
-    When the user creates a test titled "<script>alert('xss')</script>"
+    When the user creates a test titled "<img src=x onerror=alert(1)>"
     Then the response status should not be 500
 
   Scenario: Oversized test title is rejected
