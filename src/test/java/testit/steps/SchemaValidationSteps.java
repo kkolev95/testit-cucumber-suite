@@ -134,4 +134,71 @@ public class SchemaValidationSteps {
         assertNotNull(r.jsonPath().get("question_stats"),
             "Analytics response must contain 'question_stats'");
     }
+
+    // -------------------------------------------------------------------------
+    // Slug format
+    // -------------------------------------------------------------------------
+
+    @Then("the test slug matches the expected format")
+    public void theTestSlugMatchesTheExpectedFormat() {
+        String slug = context.getLastResponse().jsonPath().getString("slug");
+        assertNotNull(slug, "Slug must not be null");
+        assertTrue(slug.matches("^[a-z0-9-]+$"),
+            "Slug '" + slug + "' does not match expected pattern ^[a-z0-9-]+$");
+    }
+
+    // -------------------------------------------------------------------------
+    // ISO 8601 timestamp format
+    // -------------------------------------------------------------------------
+
+    private static final java.util.regex.Pattern ISO_8601 =
+        java.util.regex.Pattern.compile(
+            "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})?$"
+        );
+
+    @Then("the attempt started_at is a valid ISO 8601 timestamp")
+    public void theAttemptStartedAtIsAValidISO8601Timestamp() {
+        String startedAt = context.getLastResponse().jsonPath().getString("started_at");
+        assertNotNull(startedAt, "started_at must not be null");
+        assertTrue(ISO_8601.matcher(startedAt).matches(),
+            "started_at '" + startedAt + "' is not a valid ISO 8601 timestamp");
+    }
+
+    @Then("the result submitted_at is a valid ISO 8601 timestamp")
+    public void theResultSubmittedAtIsAValidISO8601Timestamp() {
+        List<Map<String, Object>> results = context.getLastResponse().jsonPath().getList("$");
+        assertFalse(results.isEmpty(), "Results list should not be empty");
+        String submittedAt = (String) results.get(0).get("submitted_at");
+        assertNotNull(submittedAt, "submitted_at must not be null");
+        assertTrue(ISO_8601.matcher(submittedAt).matches(),
+            "submitted_at '" + submittedAt + "' is not a valid ISO 8601 timestamp");
+    }
+
+    // -------------------------------------------------------------------------
+    // Score range
+    // -------------------------------------------------------------------------
+
+    @Then("the result score is within valid range")
+    public void theResultScoreIsWithinValidRange() {
+        List<Map<String, Object>> results = context.getLastResponse().jsonPath().getList("$");
+        assertFalse(results.isEmpty(), "Results list should not be empty");
+        double score = ((Number) results.get(0).get("score")).doubleValue();
+        assertTrue(score >= 0.0 && score <= 100.0,
+            "Score " + score + " is outside valid range [0, 100]");
+    }
+
+    // -------------------------------------------------------------------------
+    // Visibility enum
+    // -------------------------------------------------------------------------
+
+    private static final java.util.Set<String> VALID_VISIBILITIES =
+        java.util.Set.of("public", "link_only", "password_protected");
+
+    @Then("the test visibility is a valid enum value")
+    public void theTestVisibilityIsAValidEnumValue() {
+        String visibility = context.getLastResponse().jsonPath().getString("visibility");
+        assertNotNull(visibility, "visibility field must not be null");
+        assertTrue(VALID_VISIBILITIES.contains(visibility),
+            "visibility '" + visibility + "' is not one of " + VALID_VISIBILITIES);
+    }
 }
