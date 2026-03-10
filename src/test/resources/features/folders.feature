@@ -38,3 +38,42 @@ Feature: Folder Management
     Given the user has created a test titled "Ghost Folder Test"
     When the user assigns the test to folder id 999999
     Then the response status should be 400
+
+  Scenario: Rename a folder updates its name
+    Given the user has created a folder named "Old Name"
+    When the user renames the folder to "New Name"
+    Then the response status should be 200
+    And the folder name is "New Name"
+
+  Scenario: Delete a folder returns 204
+    Given the user has created a folder named "To Delete"
+    When the user deletes the folder
+    Then the response status should be 204
+
+  Scenario: Creating a child folder sets the correct parent
+    Given the user has created a folder named "Parent Folder"
+    When the user creates a child folder named "Child Folder" under "Parent Folder"
+    Then the response status should be 201
+    And the child folder is nested under "Parent Folder"
+
+  Scenario: Creating a folder with an empty name returns 400
+    When the user creates a folder with an empty name
+    Then the response status should be 400
+
+  Scenario: Non-owner cannot create a folder in another user's company
+    When a different user tries to create a folder in the company
+    Then access to the folder is denied
+
+  Scenario: Deleted folder no longer appears in the list
+    Given the user has created a folder named "Temporary"
+    And the user has deleted the folder
+    When the user lists the company folders
+    Then the folder list does not contain "Temporary"
+
+  Scenario: Assigning multiple tests to a folder increments the count correctly
+    Given the user has created a folder named "Multi Test Folder"
+    And the user has created a test titled "BulkTest1"
+    And the user has assigned the test to the folder
+    And the user has created a test titled "BulkTest2"
+    And the user has assigned the test to the folder
+    Then the folder test count is 2

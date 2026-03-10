@@ -232,4 +232,166 @@ public class FolderSteps {
 
         context.setLastResponse(response);
     }
+
+    // -------------------------------------------------------------------------
+    // Rename / delete folder
+    // -------------------------------------------------------------------------
+
+    @When("the user renames the folder to {string}")
+    public void theUserRenamesTheFolderTo(String newName) {
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of("name", newName))
+        .when()
+            .put("/companies/" + context.getCompanyId() + "/folders/" + context.getFolderId() + "/");
+        context.setLastResponse(response);
+    }
+
+    @Then("the folder name is {string}")
+    public void theFolderNameIs(String expectedName) {
+        String actualName = context.getLastResponse().jsonPath().getString("name");
+        assertEquals(expectedName, actualName,
+            "Expected folder name '" + expectedName + "' but was '" + actualName + "'");
+    }
+
+    @When("the user deletes the folder")
+    public void theUserDeletesTheFolder() {
+        Response response = given()
+            .header("Authorization", "Bearer " + context.getAccessToken())
+        .when()
+            .delete("/companies/" + context.getCompanyId() + "/folders/" + context.getFolderId() + "/");
+        context.setLastResponse(response);
+    }
+
+    @Given("the user has deleted the folder")
+    public void theUserHasDeletedTheFolder() {
+        given()
+            .header("Authorization", "Bearer " + context.getAccessToken())
+        .when()
+            .delete("/companies/" + context.getCompanyId() + "/folders/" + context.getFolderId() + "/")
+        .then()
+            .statusCode(204);
+    }
+
+    // -------------------------------------------------------------------------
+    // Nested folders
+    // -------------------------------------------------------------------------
+
+    @When("the user creates a child folder named {string} under {string}")
+    public void theUserCreatesAChildFolderNamedUnder(String childName, String parentName) {
+        int parentId = resolveFolderId(parentName);
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of("name", childName, "parent", parentId))
+        .when()
+            .post("/companies/" + context.getCompanyId() + "/folders/");
+        context.setLastResponse(response);
+        if (response.statusCode() == 201) {
+            int childId = getFolderIdFromListByName(childName);
+            context.putFolderId(childName, childId);
+        }
+    }
+
+    @Then("the child folder is nested under {string}")
+    public void theChildFolderIsNestedUnder(String parentName) {
+        int expectedParentId = resolveFolderId(parentName);
+        List<Map<String, Object>> folders = given()
+            .header("Authorization", "Bearer " + context.getAccessToken())
+        .when()
+            .get("/companies/" + context.getCompanyId() + "/folders/")
+        .then()
+            .statusCode(200)
+            .extract().jsonPath().getList("$");
+        boolean found = folders.stream().anyMatch(f -> {
+            Object p = f.get("parent");
+            return p != null && ((Number) p).intValue() == expectedParentId;
+        });
+        assertTrue(found, "No folder found nested under '" + parentName + "'");
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation
+    // -------------------------------------------------------------------------
+
+    @When("the user creates a folder with an empty name")
+    public void theUserCreatesAFolderWithAnEmptyName() {
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of("name", ""))
+        .when()
+            .post("/companies/" + context.getCompanyId() + "/folders/");
+        context.setLastResponse(response);
+    }
+
+    // -------------------------------------------------------------------------
+    // Access control
+    // -------------------------------------------------------------------------
+
+    @When("a different user tries to create a folder in the company")
+    public void aDifferentUserTriesToCreateAFolderInTheCompany() {
+        String email = "other_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8) + "@test.com";
+        String password = "Password123!";
+
+        given()
+            .contentType(JSON)
+            .body(Map.of(
+                "email",            email,
+                "password",         password,
+                "password_confirm", password,
+                "first_name",       "Other",
+                "last_name",        "User"
+            ))
+        .when()
+            .post("/auth/register/")
+        .then()
+            .statusCode(201);
+
+        Response loginResp = given()
+            .contentType(JSON)
+            .body(Map.of("email", email, "password", password))
+        .when()
+            .post("/auth/login/");
+        loginResp.then().statusCode(200);
+        String otherToken = loginResp.jsonPath().getString("access");
+        context.setInviteeToken(otherToken);  // stored so @After cleans up
+
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + otherToken)
+            .body(Map.of("name", "Intruder Folder"))
+        .when()
+            .post("/companies/" + context.getCompanyId() + "/folders/");
+        context.setLastResponse(response);
+    }
+
+    @Then("access to the folder is denied")
+    public void accessToTheFolderIsDenied() {
+        int status = context.getLastResponse().statusCode();
+        assertTrue(status == 403 || status == 404,
+            "Expected 403 or 404 but got " + status);
+    }
+
+    // -------------------------------------------------------------------------
+    // Folder listing
+    // -------------------------------------------------------------------------
+
+    @When("the user lists the company folders")
+    public void theUserListsTheCompanyFolders() {
+        Response response = given()
+            .header("Authorization", "Bearer " + context.getAccessToken())
+        .when()
+            .get("/companies/" + context.getCompanyId() + "/folders/");
+        context.setLastResponse(response);
+    }
+
+    @Then("the folder list does not contain {string}")
+    public void theFolderListDoesNotContain(String folderName) {
+        context.getLastResponse().then().statusCode(200);
+        List<Map<String, Object>> folders = context.getLastResponse().jsonPath().getList("$");
+        boolean found = folders.stream().anyMatch(f -> folderName.equals(f.get("name")));
+        assertFalse(found, "Folder list should not contain '" + folderName + "' after deletion");
+    }
 }

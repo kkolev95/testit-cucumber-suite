@@ -1,5 +1,6 @@
 package testit.steps;
 
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
@@ -93,5 +94,204 @@ public class AnalyticsSteps {
         int status = context.getLastResponse().statusCode();
         assertTrue(status == 403 || status == 404,
             "Expected 403 or 404 but got " + status);
+    }
+
+    // -------------------------------------------------------------------------
+    // Average score
+    // -------------------------------------------------------------------------
+
+    @Given("one anonymous user submits correctly and another submits with no answers")
+    public void oneSubmitsCorrectlyAndAnotherSubmitsNothing() {
+        String slug = context.getTestSlug();
+        String qId  = String.valueOf(context.getQuestionId());
+        int correctId = context.getCorrectAnswerId();
+
+        // Client 1: submits the correct answer
+        Response start1 = given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "AvgTester1"))
+        .when()
+            .post("/tests/" + slug + "/attempts/");
+        start1.then().statusCode(201);
+        int attemptId1 = start1.jsonPath().getInt("id");
+        Map<String, String> cookies1 = start1.cookies();
+
+        given()
+            .contentType(JSON).cookies(cookies1)
+            .body(Map.of("draft_answers", Map.of(qId, List.of(correctId))))
+        .when()
+            .put("/tests/" + slug + "/attempts/" + attemptId1 + "/");
+        given()
+            .contentType(JSON).cookies(cookies1)
+            .body(Map.of("draft_answers", Map.of(qId, List.of(correctId))))
+        .when()
+            .post("/tests/" + slug + "/attempts/" + attemptId1 + "/submit/")
+        .then().statusCode(200);
+
+        // Client 2: submits with no answers → 0%
+        Response start2 = given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "AvgTester2"))
+        .when()
+            .post("/tests/" + slug + "/attempts/");
+        start2.then().statusCode(201);
+        int attemptId2 = start2.jsonPath().getInt("id");
+        Map<String, String> cookies2 = start2.cookies();
+
+        given()
+            .contentType(JSON).cookies(cookies2)
+            .body(Map.of("draft_answers", Map.of()))
+        .when()
+            .post("/tests/" + slug + "/attempts/" + attemptId2 + "/submit/")
+        .then().statusCode(200);
+    }
+
+    @Then("the average score is approximately 50 percent")
+    public void theAverageScoreIsApproximately50Percent() {
+        context.getLastResponse().then().statusCode(200);
+        Double avgScore = context.getLastResponse().jsonPath().getDouble("average_score");
+        assertNotNull(avgScore, "average_score should not be null");
+        assertTrue(Math.abs(avgScore - 50.0) <= 1.0,
+            "Expected average_score ≈ 50 but was " + avgScore);
+    }
+
+    // -------------------------------------------------------------------------
+    // Completion rate
+    // -------------------------------------------------------------------------
+
+    @Given("one anonymous user abandons the test and another submits")
+    public void oneAbandonsAndAnotherSubmits() {
+        String slug = context.getTestSlug();
+
+        // Client 1: starts but never submits (abandoned)
+        given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "Abandoner"))
+        .when()
+            .post("/tests/" + slug + "/attempts/")
+        .then().statusCode(201);
+
+        // Client 2: starts and submits
+        Response start2 = given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "Completer"))
+        .when()
+            .post("/tests/" + slug + "/attempts/");
+        start2.then().statusCode(201);
+        int attemptId2 = start2.jsonPath().getInt("id");
+        Map<String, String> cookies2 = start2.cookies();
+
+        given()
+            .contentType(JSON).cookies(cookies2)
+            .body(Map.of("draft_answers", Map.of()))
+        .when()
+            .post("/tests/" + slug + "/attempts/" + attemptId2 + "/submit/")
+        .then().statusCode(200);
+    }
+
+    @Then("the completion rate is approximately 50 percent")
+    public void theCompletionRateIsApproximately50Percent() {
+        context.getLastResponse().then().statusCode(200);
+        Double completionRate = context.getLastResponse().jsonPath().getDouble("completion_rate");
+        assertNotNull(completionRate, "completion_rate should not be null");
+        assertTrue(Math.abs(completionRate - 50.0) <= 1.0,
+            "Expected completion_rate ≈ 50 but was " + completionRate);
+    }
+
+    // -------------------------------------------------------------------------
+    // Answer distribution
+    // -------------------------------------------------------------------------
+
+    @Given("one anonymous user selects the correct answer and another selects the wrong answer")
+    public void oneSelectsCorrectAndAnotherSelectsWrong() {
+        String slug = context.getTestSlug();
+        String qId  = String.valueOf(context.getQuestionId());
+        int correctId = context.getCorrectAnswerId();
+        int wrongId   = context.getWrongAnswerId();
+
+        // Client 1: correct answer
+        Response start1 = given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "DistTester1"))
+        .when()
+            .post("/tests/" + slug + "/attempts/");
+        start1.then().statusCode(201);
+        int id1 = start1.jsonPath().getInt("id");
+        Map<String, String> c1 = start1.cookies();
+
+        given()
+            .contentType(JSON).cookies(c1)
+            .body(Map.of("draft_answers", Map.of(qId, List.of(correctId))))
+        .when()
+            .put("/tests/" + slug + "/attempts/" + id1 + "/");
+        given()
+            .contentType(JSON).cookies(c1)
+            .body(Map.of("draft_answers", Map.of(qId, List.of(correctId))))
+        .when()
+            .post("/tests/" + slug + "/attempts/" + id1 + "/submit/")
+        .then().statusCode(200);
+
+        // Client 2: wrong answer
+        Response start2 = given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "DistTester2"))
+        .when()
+            .post("/tests/" + slug + "/attempts/");
+        start2.then().statusCode(201);
+        int id2 = start2.jsonPath().getInt("id");
+        Map<String, String> c2 = start2.cookies();
+
+        given()
+            .contentType(JSON).cookies(c2)
+            .body(Map.of("draft_answers", Map.of(qId, List.of(wrongId))))
+        .when()
+            .put("/tests/" + slug + "/attempts/" + id2 + "/");
+        given()
+            .contentType(JSON).cookies(c2)
+            .body(Map.of("draft_answers", Map.of(qId, List.of(wrongId))))
+        .when()
+            .post("/tests/" + slug + "/attempts/" + id2 + "/submit/")
+        .then().statusCode(200);
+    }
+
+    @Then("the question stats show 2 answered and 1 correct")
+    public void theQuestionStatsShow2Answered1Correct() {
+        context.getLastResponse().then().statusCode(200);
+        List<Map<String, Object>> qStats = context.getLastResponse().jsonPath().getList("question_stats");
+        assertFalse(qStats.isEmpty(), "question_stats should not be empty");
+        Map<String, Object> stat = qStats.get(0);
+        int totalAnswered = ((Number) stat.get("total_answered")).intValue();
+        int correctCount  = ((Number) stat.get("correct_count")).intValue();
+        assertEquals(2, totalAnswered,
+            "Expected total_answered=2 but was " + totalAnswered);
+        assertEquals(1, correctCount,
+            "Expected correct_count=1 but was " + correctCount);
+    }
+
+    // -------------------------------------------------------------------------
+    // Difficulty
+    // -------------------------------------------------------------------------
+
+    @Then("the question difficulty is within range 0 to 1")
+    public void theQuestionDifficultyIsWithinRange() {
+        context.getLastResponse().then().statusCode(200);
+        List<Map<String, Object>> qStats = context.getLastResponse().jsonPath().getList("question_stats");
+        assertFalse(qStats.isEmpty(), "question_stats should not be empty");
+        double difficulty = ((Number) qStats.get(0).get("difficulty")).doubleValue();
+        assertTrue(difficulty >= 0.0 && difficulty <= 1.0,
+            "Expected difficulty in [0, 1] but was " + difficulty);
+    }
+
+    // -------------------------------------------------------------------------
+    // Pass rate
+    // -------------------------------------------------------------------------
+
+    @Then("the pass rate is within valid range")
+    public void thePassRateIsWithinValidRange() {
+        context.getLastResponse().then().statusCode(200);
+        Double passRate = context.getLastResponse().jsonPath().getDouble("pass_rate");
+        assertNotNull(passRate, "pass_rate should not be null after a submission");
+        assertTrue(passRate >= 0.0 && passRate <= 100.0,
+            "Expected pass_rate in [0, 100] but was " + passRate);
     }
 }

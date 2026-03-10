@@ -313,9 +313,20 @@ public class TestTakingSteps {
 
     @When("the user submits {string} multi select answers")
     public void theUserSubmitsMultiSelectAnswers(String selection) {
-        List<Integer> answerIds = "all correct".equals(selection)
-            ? context.getCorrectAnswerIds()
-            : context.getWrongAnswerIds();
+        List<Integer> answerIds;
+        if ("all correct".equals(selection)) {
+            answerIds = context.getCorrectAnswerIds();
+        } else if ("partial correct".equals(selection)) {
+            // Submit only the first correct answer — not all required (all-or-nothing rule)
+            answerIds = List.of(context.getCorrectAnswerIds().get(0));
+        } else if ("correct plus wrong".equals(selection)) {
+            // Submit all correct answers plus one wrong (still scores zero under all-or-nothing)
+            List<Integer> combined = new java.util.ArrayList<>(context.getCorrectAnswerIds());
+            combined.add(context.getWrongAnswerIds().get(0));
+            answerIds = combined;
+        } else {
+            answerIds = context.getWrongAnswerIds();
+        }
 
         String qId = String.valueOf(context.getQuestionId());
         String slug = context.getTestSlug();
