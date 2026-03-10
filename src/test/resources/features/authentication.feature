@@ -28,6 +28,13 @@ Feature: User Authentication
     Then the response status should be 200
     And the profile email matches the registered email
 
+  Scenario: Refresh token can be used to obtain a new access token
+    Given a registered user exists
+    When the user logs in with correct credentials
+    And the user refreshes their access token
+    Then the response status should be 200
+    And the response contains a new access token
+
   Scenario: Registration with an already-used email is rejected
     Given a registered user exists
     When a user tries to register with the same email again

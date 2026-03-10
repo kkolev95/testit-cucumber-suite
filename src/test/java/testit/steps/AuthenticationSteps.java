@@ -13,6 +13,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AuthenticationSteps {
 
@@ -156,6 +157,28 @@ public class AuthenticationSteps {
         .when()
             .post("/auth/register/");
         context.setLastResponse(response);
+    }
+
+    @When("the user refreshes their access token")
+    public void theUserRefreshesTheirAccessToken() {
+        // The refresh token is in the current lastResponse (the login response)
+        String refreshToken = context.getLastResponse().jsonPath().getString("refresh");
+        assertNotNull(refreshToken, "Login response must contain a refresh token");
+
+        Response response = given()
+            .contentType(JSON)
+            .body(Map.of("refresh", refreshToken))
+        .when()
+            .post("/auth/refresh/");
+        context.setLastResponse(response);
+    }
+
+    @Then("the response contains a new access token")
+    public void theResponseContainsANewAccessToken() {
+        String access = context.getLastResponse().jsonPath().getString("access");
+        assertNotNull(access, "Token refresh response must contain an access token");
+        org.junit.jupiter.api.Assertions.assertFalse(access.isBlank(),
+            "New access token must not be blank");
     }
 
     @Then("the response status should be {int}")

@@ -54,6 +54,23 @@ Feature: API Edge Cases
       | user.name@sub.example.com      |
       | firstname.lastname@example.org |
 
+  Scenario: Title with Unicode characters is handled safely
+    Given a registered and authenticated user
+    When the user creates a test titled "日本語テスト"
+    Then the response status should not be 500
+
+  Scenario: Title with emoji is handled safely
+    Given a registered and authenticated user
+    When the user creates a test titled "Test 🎯"
+    Then the response status should not be 500
+
+  Scenario: Submitting an answer from a different question is handled safely
+    Given a registered and authenticated author
+    And the author has created a test with 2 multiple choice questions
+    And an anonymous user has started the test
+    When the user submits an answer from the wrong question
+    Then the response status should not be 500
+
   Scenario: Submitting an attempt without answering any questions scores zero
     Given a registered and authenticated author
     And the author has created a test with a multiple choice question

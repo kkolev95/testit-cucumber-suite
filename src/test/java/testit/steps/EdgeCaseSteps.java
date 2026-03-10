@@ -164,6 +164,36 @@ public class EdgeCaseSteps {
         }
     }
 
+    /**
+     * Submits Q2's correct answer as the response to Q1 — the answer ID does not
+     * belong to Q1's option set. The API must handle this gracefully (not 500).
+     */
+    @When("the user submits an answer from the wrong question")
+    public void theUserSubmitsAnAnswerFromTheWrongQuestion() {
+        String qId = String.valueOf(context.getQuestionId());       // Q1
+        int crossAnswerId = context.getCorrectAnswerId2();           // Q2's correct answer
+
+        Map<String, Object> draft = Map.of(
+            "draft_answers", Map.of(qId, List.of(crossAnswerId))
+        );
+
+        given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(draft)
+        .when()
+            .put("/tests/" + context.getTestSlug() + "/attempts/" + context.getAttemptId() + "/");
+
+        Response response = given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(draft)
+        .when()
+            .post("/tests/" + context.getTestSlug() + "/attempts/" + context.getAttemptId() + "/submit/");
+
+        context.setLastResponse(response);
+    }
+
     @When("the user submits without answering any questions")
     public void theUserSubmitsWithoutAnsweringAnyQuestions() {
         Response response = given()
