@@ -144,13 +144,6 @@ public class SecuritySteps {
     // Shared assertions (accessible from all feature files)
     // -------------------------------------------------------------------------
 
-    @Then("access is denied")
-    public void accessIsDenied() {
-        int status = context.getLastResponse().statusCode();
-        assertTrue(status == 401 || status == 403 || status == 404,
-            "Expected 401, 403, or 404 but got " + status);
-    }
-
     @Then("the response status should not be {int}")
     public void theResponseStatusShouldNotBe(int unexpectedStatus) {
         int actual = context.getLastResponse().statusCode();

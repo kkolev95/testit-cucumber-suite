@@ -8,21 +8,21 @@ Feature: Security
     And the user has created a test titled "Private Test"
     And another user is registered and authenticated
     When the other user requests the test
-    Then access is denied
+    Then the response status should be 404
 
   Scenario: User B cannot update User A's test
     Given a registered and authenticated user
     And the user has created a test titled "Private Test"
     And another user is registered and authenticated
     When the other user tries to update the test
-    Then access is denied
+    Then the response status should be 404
 
   Scenario: User B cannot delete User A's test
     Given a registered and authenticated user
     And the user has created a test titled "Private Test"
     And another user is registered and authenticated
     When the other user tries to delete the test
-    Then access is denied
+    Then the response status should be 404
 
   Scenario: User B cannot read User A's results
     Given a registered and authenticated author
@@ -30,7 +30,7 @@ Feature: Security
     And an anonymous user has submitted the test
     And another user is registered and authenticated
     When the other user requests the test results
-    Then access is denied
+    Then the response status should be 404
 
   Scenario: Request with an invalid token returns 401
     Given a registered and authenticated user

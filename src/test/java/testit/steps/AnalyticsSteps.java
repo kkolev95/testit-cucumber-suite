@@ -92,8 +92,8 @@ public class AnalyticsSteps {
     @Then("access to the analytics is denied")
     public void accessToTheAnalyticsIsDenied() {
         int status = context.getLastResponse().statusCode();
-        assertTrue(status == 403 || status == 404,
-            "Expected 403 or 404 but got " + status);
+        assertEquals(404, status,
+            "Expected 404 Not Found for non-author analytics access (API hides analytics for non-owners) but got " + status);
     }
 
     // -------------------------------------------------------------------------
@@ -151,8 +151,8 @@ public class AnalyticsSteps {
         context.getLastResponse().then().statusCode(200);
         Double avgScore = context.getLastResponse().jsonPath().getDouble("average_score");
         assertNotNull(avgScore, "average_score should not be null");
-        assertTrue(Math.abs(avgScore - 50.0) <= 1.0,
-            "Expected average_score ≈ 50 but was " + avgScore);
+        assertEquals(50.0, avgScore, 0.001,
+            "Expected average_score=50.0 (1 correct + 1 zero-score) but was " + avgScore);
     }
 
     // -------------------------------------------------------------------------
@@ -194,8 +194,8 @@ public class AnalyticsSteps {
         context.getLastResponse().then().statusCode(200);
         Double completionRate = context.getLastResponse().jsonPath().getDouble("completion_rate");
         assertNotNull(completionRate, "completion_rate should not be null");
-        assertTrue(Math.abs(completionRate - 50.0) <= 1.0,
-            "Expected completion_rate ≈ 50 but was " + completionRate);
+        assertEquals(50.0, completionRate, 0.001,
+            "Expected completion_rate=50.0 (1 submitted out of 2 started) but was " + completionRate);
     }
 
     // -------------------------------------------------------------------------
@@ -278,8 +278,8 @@ public class AnalyticsSteps {
         List<Map<String, Object>> qStats = context.getLastResponse().jsonPath().getList("question_stats");
         assertFalse(qStats.isEmpty(), "question_stats should not be empty");
         double difficulty = ((Number) qStats.get(0).get("difficulty")).doubleValue();
-        assertTrue(difficulty >= 0.0 && difficulty <= 1.0,
-            "Expected difficulty in [0, 1] but was " + difficulty);
+        assertEquals(0.0, difficulty, 0.001,
+            "Expected difficulty=0.0 after 1/1 correct submission but was " + difficulty);
     }
 
     // -------------------------------------------------------------------------
@@ -291,7 +291,7 @@ public class AnalyticsSteps {
         context.getLastResponse().then().statusCode(200);
         Double passRate = context.getLastResponse().jsonPath().getDouble("pass_rate");
         assertNotNull(passRate, "pass_rate should not be null after a submission");
-        assertTrue(passRate >= 0.0 && passRate <= 100.0,
-            "Expected pass_rate in [0, 100] but was " + passRate);
+        assertEquals(100.0, passRate, 0.001,
+            "Expected pass_rate=100.0 after a 100% correct submission but was " + passRate);
     }
 }

@@ -17,4 +17,4 @@ Feature: Individual Result Detail
     And an anonymous user has submitted the test
     And another user is registered and authenticated
     When the other user requests the result detail
-    Then access is denied
+    Then the response status should be 404

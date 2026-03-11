@@ -12,6 +12,7 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class StateTransitionSteps {
 
@@ -79,7 +80,8 @@ public class StateTransitionSteps {
     public void theDeletedTestIsNotInTheList() {
         List<Map<String, Object>> tests = context.getLastResponse().jsonPath().getList("$");
         String slug = context.getTestSlug();
-        if (tests == null || tests.isEmpty() || slug == null) return;
+        assertNotNull(tests, "Test list must not be null — API should return an empty array after deletion");
+        assertNotNull(slug, "Test slug must not be null — test setup failed");
         boolean found = tests.stream().anyMatch(t -> slug.equals(t.get("slug")));
         assertFalse(found, "Deleted test with slug '" + slug + "' should not appear in the test list");
     }

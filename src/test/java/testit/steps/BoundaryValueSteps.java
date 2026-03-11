@@ -12,7 +12,7 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BoundaryValueSteps {
 
@@ -109,7 +109,7 @@ public class BoundaryValueSteps {
     @Then("starting the attempt is rejected")
     public void startingTheAttemptIsRejected() {
         int status = context.getLastResponse().statusCode();
-        assertTrue(status == 400 || status == 403 || status == 429,
-            "Expected 400, 403, or 429 to indicate attempt limit reached, but got " + status);
+        assertEquals(403, status,
+            "Expected 403 Forbidden when same session exceeds max_attempts but got " + status);
     }
 }

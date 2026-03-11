@@ -183,8 +183,8 @@ public class SchemaValidationSteps {
         List<Map<String, Object>> results = context.getLastResponse().jsonPath().getList("$");
         assertFalse(results.isEmpty(), "Results list should not be empty");
         double score = ((Number) results.get(0).get("score")).doubleValue();
-        assertTrue(score >= 0.0 && score <= 100.0,
-            "Score " + score + " is outside valid range [0, 100]");
+        assertEquals(100.0, score, 0.001,
+            "Expected score=100.0 for an all-correct submission but was " + score);
     }
 
     // -------------------------------------------------------------------------

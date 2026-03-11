@@ -370,8 +370,8 @@ public class FolderSteps {
     @Then("access to the folder is denied")
     public void accessToTheFolderIsDenied() {
         int status = context.getLastResponse().statusCode();
-        assertTrue(status == 403 || status == 404,
-            "Expected 403 or 404 but got " + status);
+        assertEquals(404, status,
+            "Expected 404 Not Found for non-member folder access (API hides folders from non-members) but got " + status);
     }
 
     // -------------------------------------------------------------------------

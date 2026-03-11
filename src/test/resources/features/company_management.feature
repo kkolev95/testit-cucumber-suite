@@ -64,7 +64,7 @@ Feature: Company Management
     Given the user has created a company named "Private Corp"
     And the user has created a company test titled "Secret Quiz"
     When a non-member requests the company test
-    Then access is denied
+    Then the response status should be 401
 
   Scenario: Admin can change a member's role
     Given the user has created a company named "Roles Corp"
@@ -76,7 +76,7 @@ Feature: Company Management
     Given the user has created a company named "Roles Corp"
     And the admin has invited a second user who joined as "student"
     When a non-admin member tries to update a member's role
-    Then access is denied
+    Then the response status should be 403
 
   Scenario: Admin can remove a member from the company
     Given the user has created a company named "Remove Corp"
