@@ -1,5 +1,6 @@
 package testit.steps;
 
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import testit.context.ScenarioContext;
@@ -30,7 +31,7 @@ public class EdgeCaseSteps {
         ));
 
         Object fieldValue;
-        if (field.equals("max_attempts")) {
+        if (field.equals("max_attempts") || field.equals("time_limit_minutes")) {
             fieldValue = Integer.parseInt(value);
         } else if (value.equals("(whitespace)")) {
             fieldValue = "   ";
@@ -120,6 +121,147 @@ public class EdgeCaseSteps {
             : given())
         .when()
             .get("/tests/" + slug + "/");
+        context.setLastResponse(response);
+    }
+
+    @When("the user creates a test with a very long title")
+    public void theUserCreatesATestWithAVeryLongTitle() {
+        String longTitle = "A".repeat(1000);
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "title",             longTitle,
+                "visibility",        "link_only",
+                "max_attempts",      3,
+                "show_answers_after", false
+            ))
+        .when()
+            .post("/tests/");
+        context.setLastResponse(response);
+    }
+
+    @When("the user creates a test with time_limit_minutes of {int}")
+    public void theUserCreatesATestWithTimeLimitMinutesOf(int timeLimitMinutes) {
+        Map<String, Object> body = new HashMap<>(Map.of(
+            "title",              "TimeLimit_" + UUID.randomUUID().toString().replace("-", "").substring(0, 6),
+            "visibility",         "link_only",
+            "max_attempts",       3,
+            "show_answers_after", false
+        ));
+        body.put("time_limit_minutes", timeLimitMinutes);
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(body)
+        .when()
+            .post("/tests/");
+        context.setLastResponse(response);
+        if (response.statusCode() == 201) {
+            context.setTestSlug(response.jsonPath().getString("slug"));
+        }
+    }
+
+    @When("the user creates a test with a null description")
+    public void theUserCreatesATestWithANullDescription() {
+        Map<String, Object> body = new HashMap<>();
+        body.put("title",             "NullDesc_" + UUID.randomUUID().toString().replace("-", "").substring(0, 6));
+        body.put("visibility",        "link_only");
+        body.put("max_attempts",      3);
+        body.put("show_answers_after", false);
+        body.put("description",       null);
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(body)
+        .when()
+            .post("/tests/");
+        context.setLastResponse(response);
+        if (response.statusCode() == 201) {
+            context.setTestSlug(response.jsonPath().getString("slug"));
+        }
+    }
+
+    @When("the user sends a company invite with role {string}")
+    public void theUserSendsACompanyInviteWithRole(String role) {
+        String dummyEmail = "invite_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8) + "@test.com";
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of("email", dummyEmail, "role", role))
+        .when()
+            .post("/companies/" + context.getCompanyId() + "/invites/");
+        context.setLastResponse(response);
+    }
+
+    @When("the user requests a test with a very long slug")
+    public void theUserRequestsATestWithAVeryLongSlug() {
+        String longSlug = "a".repeat(500);
+        Response response = (context.getAccessToken() != null
+            ? given().header("Authorization", "Bearer " + context.getAccessToken())
+            : given())
+        .when()
+            .get("/tests/" + longSlug + "/");
+        context.setLastResponse(response);
+    }
+
+    @Given("an anonymous user has started the test for an edge case")
+    public void anAnonymousUserHasStartedTheTestForAnEdgeCase() {
+        Response response = given()
+            .contentType(JSON)
+            .body(Map.of("anonymous_name", "Edge Taker"))
+        .when()
+            .post("/tests/" + context.getTestSlug() + "/attempts/");
+        response.then().statusCode(201);
+        context.setAttemptId(response.jsonPath().getInt("id"));
+        context.setAnonCookies(response.cookies());
+    }
+
+    @When("the user saves an empty draft")
+    public void theUserSavesAnEmptyDraft() {
+        Response response = given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(Map.of("draft_answers", Map.of()))
+        .when()
+            .put("/tests/" + context.getTestSlug() + "/attempts/" + context.getAttemptId() + "/");
+        context.setLastResponse(response);
+    }
+
+    @When("the user creates a password-protected test with password {string}")
+    public void theUserCreatesAPasswordProtectedTestWith(String password) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("title",             "PwTest_" + UUID.randomUUID().toString().replace("-", "").substring(0, 6));
+        body.put("visibility",        "password_protected");
+        body.put("max_attempts",      3);
+        body.put("show_answers_after", false);
+        body.put("password",          password);
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(body)
+        .when()
+            .post("/tests/");
+        context.setLastResponse(response);
+        if (response.statusCode() == 201) {
+            context.setTestSlug(response.jsonPath().getString("slug"));
+        }
+    }
+
+    @When("the user creates a password-protected test with a 500-character password")
+    public void theUserCreatesAPasswordProtectedTestWithA500CharacterPassword() {
+        Map<String, Object> body = new HashMap<>();
+        body.put("title",             "PwLong_" + UUID.randomUUID().toString().replace("-", "").substring(0, 6));
+        body.put("visibility",        "password_protected");
+        body.put("max_attempts",      3);
+        body.put("show_answers_after", false);
+        body.put("password",          "a".repeat(500));
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(body)
+        .when()
+            .post("/tests/");
         context.setLastResponse(response);
     }
 

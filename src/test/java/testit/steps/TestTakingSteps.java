@@ -397,4 +397,72 @@ public class TestTakingSteps {
             .post("/tests/" + context.getTestSlug() + "/attempts/" + context.getAttemptId() + "/submit/");
         context.setLastResponse(response);
     }
+
+    // -------------------------------------------------------------------------
+    // New gap-coverage steps
+    // -------------------------------------------------------------------------
+
+    @Then("the attempt id is positive")
+    public void theAttemptIdIsPositive() {
+        int id = context.getLastResponse().jsonPath().getInt("id");
+        assertTrue(id > 0, "Expected a positive attempt id but got " + id);
+    }
+
+    @When("the user saves a draft with all correct answers")
+    public void theUserSavesADraftWithAllCorrectAnswers() {
+        String qId = String.valueOf(context.getQuestionId());
+        Map<String, Object> draft = Map.of(
+            "draft_answers", Map.of(qId, List.of(context.getCorrectAnswerId()))
+        );
+        Response response = given()
+            .contentType(JSON)
+            .cookies(context.getAnonCookies())
+            .body(draft)
+        .when()
+            .put("/tests/" + context.getTestSlug() + "/attempts/" + context.getAttemptId() + "/");
+        context.setLastResponse(response);
+    }
+
+    @Given("the author has created a test with show_answers_after enabled")
+    public void theAuthorHasCreatedATestWithShowAnswersAfterEnabled() {
+        Response testResp = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "title",              "CukeShow_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8),
+                "visibility",         "link_only",
+                "max_attempts",       5,
+                "show_answers_after", true
+            ))
+        .when()
+            .post("/tests/");
+        testResp.then().statusCode(201);
+        context.setTestSlug(testResp.jsonPath().getString("slug"));
+
+        Response qResp = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of(
+                "question_text", "What is the capital of France?",
+                "question_type", "multiple_choice",
+                "answers", List.of(
+                    Map.of("answer_text", "Paris",  "is_correct", true,  "order", 1),
+                    Map.of("answer_text", "London", "is_correct", false, "order", 2),
+                    Map.of("answer_text", "Berlin", "is_correct", false, "order", 3)
+                )
+            ))
+        .when()
+            .post("/tests/" + context.getTestSlug() + "/questions/");
+        qResp.then().statusCode(201);
+        context.setQuestionId(qResp.jsonPath().getInt("id"));
+
+        List<Map<String, Object>> answers = qResp.jsonPath().getList("answers");
+        for (Map<String, Object> answer : answers) {
+            Object isCorrectObj = answer.get("is_correct");
+            boolean isCorrect = isCorrectObj != null && (boolean) isCorrectObj;
+            int id = (int) answer.get("id");
+            if (isCorrect) context.setCorrectAnswerId(id);
+            else if (context.getWrongAnswerId() == 0) context.setWrongAnswerId(id);
+        }
+    }
 }

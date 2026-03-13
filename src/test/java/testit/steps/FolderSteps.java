@@ -378,6 +378,49 @@ public class FolderSteps {
     // Folder listing
     // -------------------------------------------------------------------------
 
+    @When("the user fetches the folder details")
+    public void theUserFetchesTheFolderDetails() {
+        Response response = given()
+            .header("Authorization", "Bearer " + context.getAccessToken())
+        .when()
+            .get("/companies/" + context.getCompanyId() + "/folders/" + context.getFolderId() + "/");
+        context.setLastResponse(response);
+    }
+
+    @Then("the folder detail has required fields")
+    public void theFolderDetailHasRequiredFields() {
+        Response r = context.getLastResponse();
+        r.then().statusCode(200);
+        assertNotNull(r.jsonPath().get("id"),          "id must be present");
+        assertNotNull(r.jsonPath().getString("name"),  "name must be present");
+        assertNotNull(r.jsonPath().getString("created_at"), "created_at must be present");
+        Integer testCount = r.jsonPath().getInt("test_count");
+        assertNotNull(testCount, "test_count must be present");
+        assertEquals(0, (int) testCount, "test_count should be 0 for a fresh folder");
+    }
+
+    @When("the user assigns the test to a non-existent folder")
+    public void theUserAssignsTheTestToANonExistentFolder() {
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getAccessToken())
+            .body(Map.of("folder", 999999))
+        .when()
+            .patch("/tests/" + context.getTestSlug() + "/");
+        context.setLastResponse(response);
+    }
+
+    @When("the other user tries to assign the test to a folder")
+    public void theOtherUserTriesToAssignTheTestToAFolder() {
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getInviteeToken())
+            .body(Map.of("folder", context.getFolderId()))
+        .when()
+            .patch("/tests/" + context.getTestSlug() + "/");
+        context.setLastResponse(response);
+    }
+
     @When("the user lists the company folders")
     public void theUserListsTheCompanyFolders() {
         Response response = given()

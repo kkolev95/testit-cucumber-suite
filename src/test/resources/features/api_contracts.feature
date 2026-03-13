@@ -26,3 +26,15 @@ Feature: API Contracts
   Scenario: API responses include a JSON Content-Type header
     When the user lists their tests
     Then the response Content-Type is application/json
+
+  Scenario: Fetching a question by id returns its text and answers
+    Given the user has created a test titled "Question Detail Test"
+    And the author has added a multiple choice question
+    When the user fetches the question details
+    Then the response status should be 200
+    And the question details contain the question text and answers
+
+  Scenario: Fetching a non-existent question returns 404
+    Given the user has created a test titled "Question Detail Test"
+    When the user fetches a non-existent question
+    Then the response status should be 404

@@ -313,6 +313,26 @@ public class CompanySteps {
         context.setLastResponse(response);
     }
 
+    @When("a non-member tries to patch the company test title")
+    public void aNonMemberTriesToPatchTheCompanyTestTitle() {
+        Response response = given()
+            .contentType(JSON)
+            .header("Authorization", "Bearer " + context.getInviteeToken())
+            .body(Map.of("title", "Hacked Company Test"))
+        .when()
+            .patch("/tests/company/" + context.getCompanyId() + "/" + context.getTestSlug() + "/");
+        context.setLastResponse(response);
+    }
+
+    @When("a non-member tries to delete the company test")
+    public void aNonMemberTriesToDeleteTheCompanyTest() {
+        Response response = given()
+            .header("Authorization", "Bearer " + context.getInviteeToken())
+        .when()
+            .delete("/tests/company/" + context.getCompanyId() + "/" + context.getTestSlug() + "/");
+        context.setLastResponse(response);
+    }
+
     @When("the admin tries to remove themselves from the company")
     public void theAdminTriesToRemoveThemselvesFromTheCompany() {
         int adminUserId = given()

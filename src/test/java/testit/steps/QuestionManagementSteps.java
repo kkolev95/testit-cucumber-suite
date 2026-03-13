@@ -225,6 +225,34 @@ public class QuestionManagementSteps {
         assertEquals(expectedIds, actualIds, "Questions should appear in reverse order after reorder");
     }
 
+    @When("the user fetches the question details")
+    public void theUserFetchesTheQuestionDetails() {
+        Response response = given()
+            .header("Authorization", "Bearer " + context.getAccessToken())
+        .when()
+            .get("/tests/" + context.getTestSlug() + "/questions/" + context.getQuestionId() + "/");
+        context.setLastResponse(response);
+    }
+
+    @When("the user fetches a non-existent question")
+    public void theUserFetchesANonExistentQuestion() {
+        Response response = given()
+            .header("Authorization", "Bearer " + context.getAccessToken())
+        .when()
+            .get("/tests/" + context.getTestSlug() + "/questions/99999/");
+        context.setLastResponse(response);
+    }
+
+    @Then("the question details contain the question text and answers")
+    public void theQuestionDetailsContainTheQuestionTextAndAnswers() {
+        Response r = context.getLastResponse();
+        r.then().statusCode(200);
+        assertNotNull(r.jsonPath().getString("question_text"), "question_text must be present");
+        List<?> answers = r.jsonPath().getList("answers");
+        assertNotNull(answers, "answers must be present");
+        assertFalse(answers.isEmpty(), "answers list must not be empty");
+    }
+
     @When("the author updates a non-existent question")
     public void theAuthorUpdatesANonExistentQuestion() {
         Response response = given()

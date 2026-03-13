@@ -77,3 +77,61 @@ Feature: API Edge Cases
     And an anonymous user has started the test
     When the user submits without answering any questions
     Then the score should be 0
+
+  Scenario: Test with a very long title is rejected
+    Given a registered and authenticated user
+    When the user creates a test with a very long title
+    Then the response status should be 400
+
+  Scenario: Test with special characters in the title is accepted
+    Given a registered and authenticated user
+    When the user creates a test titled "@#$%^&*() Special!"
+    Then the response status should be 201
+
+  Scenario Outline: Tests with invalid time_limit_minutes values are rejected
+    Given a registered and authenticated user
+    When the user creates a test with time_limit_minutes of <value>
+    Then the response status should be 400
+
+    Examples:
+      | value      |
+      | -1         |
+      | 2147483647 |
+
+  Scenario: Test with time_limit_minutes of 0 is accepted
+    Given a registered and authenticated user
+    When the user creates a test with time_limit_minutes of 0
+    Then the response status should be 201
+
+  Scenario: Request with an invalid slug format returns 404
+    Given a registered and authenticated user
+    When the user requests a test with slug "invalid!!!slug###@@@"
+    Then the response status should be 404
+
+  Scenario: Request with a very long slug returns 404
+    Given a registered and authenticated user
+    When the user requests a test with a very long slug
+    Then the response status should be 404
+
+  Scenario: Company invite with an invalid role value is rejected
+    Given a registered and authenticated user
+    And the user has created a company named "Invite Corp"
+    When the user sends a company invite with role "superuser"
+    Then the response status should be 400
+
+  Scenario: Saving a draft with no answers is accepted
+    Given a registered and authenticated author
+    And the author has created a test with a multiple choice question
+    And an anonymous user has started the test for an edge case
+    When the user saves an empty draft
+    Then the response status should be 200
+
+  Scenario: Password-protected test with an empty password is rejected
+    Given a registered and authenticated user
+    When the user creates a password-protected test with password ""
+    Then the response status should be 400
+
+  Scenario: Password-protected test with a 500-character password is accepted
+    Given a registered and authenticated user
+    When the user creates a password-protected test with a 500-character password
+    Then the response status should be 201

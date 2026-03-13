@@ -88,3 +88,17 @@ Feature: Company Management
     Given the user has created a company named "Last Admin Corp"
     When the admin tries to remove themselves from the company
     Then the response status should be 400
+
+  Scenario: Non-member cannot PATCH a company test
+    Given the user has created a company named "CRUD Corp"
+    And the user has created a company test titled "Non-Member PATCH Quiz"
+    And another user is registered and authenticated
+    When a non-member tries to patch the company test title
+    Then the response status should be 404
+
+  Scenario: Non-member cannot DELETE a company test
+    Given the user has created a company named "CRUD Corp"
+    And the user has created a company test titled "Non-Member DELETE Quiz"
+    And another user is registered and authenticated
+    When a non-member tries to delete the company test
+    Then the response status should be 404
