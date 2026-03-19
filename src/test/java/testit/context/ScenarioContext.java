@@ -24,6 +24,7 @@ public class ScenarioContext {
     private int attemptId;
     private Map<String, String> anonCookies = new HashMap<>();
     private List<Integer> questionIds = new ArrayList<>();
+    private List<String> createdTestSlugs = new ArrayList<>();
 
     // Multi-select: multiple correct/wrong answer IDs
     private List<Integer> correctAnswerIds = new ArrayList<>();
@@ -60,6 +61,7 @@ public class ScenarioContext {
         attemptId = 0;
         anonCookies = new HashMap<>();
         questionIds = new ArrayList<>();
+        createdTestSlugs = new ArrayList<>();
         correctAnswerIds = new ArrayList<>();
         wrongAnswerIds = new ArrayList<>();
         inviteeEmail = null;
@@ -109,6 +111,9 @@ public class ScenarioContext {
 
     public List<Integer> getQuestionIds() { return questionIds; }
     public void setQuestionIds(List<Integer> questionIds) { this.questionIds = questionIds; }
+
+    public List<String> getCreatedTestSlugs() { return createdTestSlugs; }
+    public void addCreatedTestSlug(String slug) { this.createdTestSlugs.add(slug); }
 
     public List<Integer> getCorrectAnswerIds() { return correctAnswerIds; }
     public void setCorrectAnswerIds(List<Integer> correctAnswerIds) { this.correctAnswerIds = correctAnswerIds; }
