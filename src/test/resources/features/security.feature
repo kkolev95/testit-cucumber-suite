@@ -60,3 +60,19 @@ Feature: Security
   Scenario: Extremely long email address is rejected during registration
     When a new user registers with email "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@example.com"
     Then the response status should be 400
+
+  Scenario: Profile response does not expose the user's password
+    Given a registered and authenticated user
+    When the user requests their profile
+    Then the response body does not contain a password field
+
+  Scenario: Login attempt with a non-existent email returns 401
+    When a login attempt is made with a non-existent email
+    Then the response status should be 401
+
+  Scenario: Authenticated user's test list only shows their own tests
+    Given a registered and authenticated user
+    And the user has created a test titled "Isolated Test"
+    And another user is registered and authenticated
+    When the other user lists their tests
+    Then the other user's test list does not contain the first user's test

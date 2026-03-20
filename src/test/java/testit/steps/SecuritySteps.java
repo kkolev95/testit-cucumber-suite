@@ -6,6 +6,7 @@ import io.cucumber.java.en.When;
 import io.restassured.response.Response;
 import testit.context.ScenarioContext;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -149,5 +150,53 @@ public class SecuritySteps {
         int actual = context.getLastResponse().statusCode();
         assertNotEquals(unexpectedStatus, actual,
             "Expected status to not be " + unexpectedStatus + " but it was " + actual);
+    }
+
+    // -------------------------------------------------------------------------
+    // Security hygiene
+    // -------------------------------------------------------------------------
+
+    @Then("the response body does not contain a password field")
+    public void theResponseBodyDoesNotContainAPasswordField() {
+        context.getLastResponse().then().statusCode(200);
+        Map<?, ?> body = context.getLastResponse().jsonPath().getMap("$");
+        assertFalse(body.containsKey("password"),
+            "Profile response must not expose a 'password' field, but it was present. Keys: " + body.keySet());
+    }
+
+    @When("a login attempt is made with a non-existent email")
+    public void aLoginAttemptIsMadeWithANonExistentEmail() {
+        String fakeEmail = "nonexistent_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8) + "@example.com";
+        Response response = given()
+            .contentType(JSON)
+            .body(Map.of("email", fakeEmail, "password", "SomePassword123!"))
+        .when()
+            .post("/auth/login/");
+        context.setLastResponse(response);
+    }
+
+    // -------------------------------------------------------------------------
+    // Test list isolation
+    // -------------------------------------------------------------------------
+
+    @When("the other user lists their tests")
+    public void theOtherUserListsTheirTests() {
+        Response response = given()
+            .header("Authorization", "Bearer " + context.getInviteeToken())
+        .when()
+            .get("/tests/");
+        context.setLastResponse(response);
+    }
+
+    @Then("the other user's test list does not contain the first user's test")
+    public void theOtherUsersTestListDoesNotContainTheFirstUsersTest() {
+        context.getLastResponse().then().statusCode(200);
+        List<Map<String, Object>> tests = context.getLastResponse().jsonPath().getList("$");
+        assertNotNull(tests, "Test list must not be null");
+        boolean found = tests.stream()
+            .anyMatch(t -> context.getTestSlug().equals(t.get("slug")));
+        assertFalse(found,
+            "The other user's test list must not contain the first user's test (slug='"
+                + context.getTestSlug() + "'). Lists must be isolated per user.");
     }
 }

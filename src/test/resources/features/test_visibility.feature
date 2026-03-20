@@ -22,3 +22,15 @@ Feature: Test Visibility Modes
     When the author changes the test visibility to "public"
     Then the response status should be 200
     And an anonymous user can access the test
+
+  Scenario: Changing visibility from link_only to public makes the test discoverable in the public list
+    Given the author has created a test with visibility "link_only"
+    When the author changes the test visibility to "public"
+    And an anonymous user requests the public test list
+    Then the test appears in the public list
+
+  Scenario: Changing visibility from public to link_only removes the test from the public list
+    Given the author has created a test with visibility "public"
+    When the author changes the test visibility to "link_only"
+    And an anonymous user requests the public test list
+    Then the test does not appear in the public list
